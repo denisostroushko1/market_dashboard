@@ -3,7 +3,7 @@
 ########################
 # LIBRARY AND FUNCTIONS 
 
-
+library(scales)
 library(aws.s3)
 library(knitr)
 library(rlang)
@@ -79,6 +79,29 @@ format_dollar <-
       )
     )
   }
+
+## special formatting 
+format_number <- function(x, rounding) {
+  
+  if(x < 1){
+     return(formatC(x, format = "f", big.mark = ",", digits = rounding))
+  } else if (x < 1e6) {
+    # Add commas for numbers below 1 million
+    return(formatC(x, format = "f", big.mark = ",", digits = rounding))
+  } else if (x < 1e9) {
+    # Use "M" for millions
+    return(paste0(formatC(x / 1e6, format = "f", digits = rounding), "M"))
+  } else if (x < 1e12) {
+    # Use "B" for billions
+    return(paste0(formatC(x / 1e9, format = "f", digits = rounding), "B"))
+  } else if (x < 1e15) {
+    # Use "T" for trillions
+    return(paste0(formatC(x / 1e12, format = "f", digits = rounding), "T"))
+  } else {
+    # Use "Q" for quadrillions or numbers above trillions
+    return(paste0(formatC(x / 1e15, format = "f", digits = rounding), "Q"))
+  }
+}
 
 ##########################
 # CONNECT TO S3
@@ -527,6 +550,8 @@ BTC_risk_metric <-
     
   }
 
+
+
 ## risk metric for ALTCOINS 
 ALT_risk_metric <- 
   function(DATA, DAY_MA, TIME_POWER, RISK_POWER, AVG_VOLATILITY_TIMEFRAME){
@@ -598,30 +623,28 @@ price_value_box <-
     
     data_set <- DATA %>% filter(asset == cur_asset )
     
-    main_val <- DATA[DATA$datetime == max(DATA$datetime) & 
-                                DATA$asset == cur_asset, ]$price
+    main_val <- data_set[data_set$asset == cur_asset, ] %>% filter(datetime == max(datetime)) %>% select(price) %>% unlist()
     
-    main_val <- 
-        case_when(
-          cur_asset %in% usd_lil_value_assets ~ format_dollar(main_val, rounding), 
-          cur_asset %in% btc_value_assets ~ 
-            as.character(round(main_val, rounding)),
-          TRUE ~ format_dollar(main_val, rounding)
-      )
+    if(cur_asset %in% c("ETH/BTC")){
+      main_val <- paste0(format_number(main_val, rounding))
+    }else{
+      main_val <- paste0('$', format_number(main_val, rounding))
+    }
+    second_val <- data_set[data_set$asset == cur_asset, ] %>% filter(datetime == max(datetime)) %>% 
+      select(volatility) %>% unlist() %>% {.-1}
     
-    second_val <- 100*round(DATA[DATA$datetime == max(DATA$datetime) & 
-                                   DATA$asset == cur_asset,]$volatility - 1,4)
+    second_val <- scales::percent(second_val, 0.01)
     
-    color_val <- ifelse(DATA[DATA$datetime == max(DATA$datetime) & 
-                               DATA$asset == cur_asset,]$volatility > 1,  "green", "red")
+    color_val <- ifelse(second_val > 0,  "green", "red")
     
-    cons_vol <- data_set[data_set$datetime == max(data_set$datetime), ]$consequtive_days
+    cons_vol <- data_set[data_set$asset == cur_asset, ] %>% 
+      filter(datetime == max(datetime)) %>% select(consequtive_days) %>% unlist()
     
     valueBox(
       tags$p(paste("Current Price: ",main_val), style = "font-size: 50%;"),
       
       subtitle = paste0("Daily Volatility: ", 
-                        second_val, "%", "; ", 
+                        second_val, "; ", 
                         "Same Volatility Days: ", cons_vol
                         ), 
       
@@ -639,35 +662,28 @@ ma_value_box <-
         TRUE ~ 2
       )
     
-    main_val <- DATA[DATA$datetime == max(DATA$datetime) & 
-                       DATA$asset == cur_asset,]$week_ma_20
+    data_set <- DATA %>% filter(asset == cur_asset )
     
-    main_val <- 
-      case_when(
-        cur_asset %in% usd_lil_value_assets ~ format_dollar(main_val, rounding), 
-        cur_asset %in% btc_value_assets ~ 
-          as.character(round(main_val, rounding)),
-        TRUE ~ format_dollar(main_val, rounding)
-      )
+    main_val <- data_set[data_set$asset == cur_asset, ] %>% filter(datetime == max(datetime)) %>% select(week_ma_20) %>% unlist()
+    price_val <- data_set[data_set$asset == cur_asset, ] %>% filter(datetime == max(datetime)) %>% select(price) %>% unlist()
+    second_val <- price_val/main_val
     
-    second_val <- 100*round(DATA[DATA$datetime == max(DATA$datetime) & 
-                                   DATA$asset == cur_asset,]$price 
-                                          /
-                              DATA[DATA$datetime == max(DATA$datetime) & 
-                                     DATA$asset == cur_asset,]$week_ma_20 
-                            - 1,4)
+    color_val <- ifelse(second_val> 1,  "green", "red")
     
-    color_val <- ifelse(DATA[DATA$datetime == max(DATA$datetime) & 
-                               DATA$asset == cur_asset,]$price / 
-                          DATA[DATA$datetime == max(DATA$datetime) & 
-                                 DATA$asset == cur_asset,]$week_ma_20> 1,  "green", "red")
+    if(cur_asset %in% c("ETH/BTC")){
+      main_val <- paste0(format_number(main_val, rounding))
+    }else{
+      main_val <- paste0('$', format_number(main_val, rounding))
+    }
+    
+    second_val <- scales::percent(second_val-1, 0.01)
     
     valueBox(
       
       tags$p(paste("20 Week Moving Average: ",main_val), style = "font-size: 40%;"),
       
       subtitle = tags$div(paste0("Price to 20 week MA % difference: ", 
-                        second_val, "%"), 
+                        second_val), 
                         br(), 
                         " " ), 
       
@@ -679,20 +695,16 @@ risk_value_box <-
   function(DATA, cur_asset){
     
     
-    main_val <- round(DATA[DATA$datetime == max(DATA$datetime) & 
-                                     DATA$asset == cur_asset,]$scaled_risk, 4)
+    main_val <- round(DATA[DATA$asset == cur_asset,] %>% filter(datetime == max(datetime)) %>% 
+                        select(scaled_risk) %>% unlist(), 4)
   
     color_val <- 
-      with(DATA[DATA$datetime == max(DATA$datetime) & 
-                  DATA$asset == cur_asset,],
-           
-           case_when(
-             scaled_risk <.2 ~ "aqua", 
-             scaled_risk >.2 & scaled_risk < .4 ~ "green", 
-             scaled_risk >.4 & scaled_risk < .6 ~ "yellow", 
-             scaled_risk >.6 & scaled_risk < .8 ~ "orange", 
-             scaled_risk >.8 & scaled_risk <= 1 ~ "red"
-           )
+      case_when(
+             main_val <.2 ~ "aqua", 
+             main_val >.2 & main_val < .4 ~ "green", 
+             main_val >.4 & main_val < .6 ~ "yellow", 
+             main_val >.6 & main_val < .8 ~ "orange", 
+             main_val >.8 & main_val <= 1 ~ "red"
       )
     
     valueBox(
@@ -714,30 +726,26 @@ ath_value_box <-
         TRUE ~ 2
       )
     
-    high_vals <- c(
-      max(DATA[DATA$asset == cur_asset,]$high), 
-      max(DATA[DATA$asset == cur_asset,]$price), 
-      max(DATA[DATA$asset == cur_asset,]$open), 
-      max(DATA[DATA$asset == cur_asset,]$low)
-    )
+    DATA %>% filter(asset == cur_asset) %>% 
+      select(high, price, open, low) %>% 
+      unlist() %>% 
+      max() -> main_val
+
+    DATA %>% 
+      filter(high == main_val) %>% 
+      select(datetime) %>% {.[1]} %>% unlist() %>% as.Date-> ath_date
+    ath_date <- ath_date[1]
     
-    main_val <- max(high_vals)
+    (DATA %>% filter(asset == cur_asset) %>% 
+      filter(datetime == max(datetime)) %>% 
+      select(price) %>% unlist())/main_val -> second_val
     
-    main_val <- 
-      case_when(
-        cur_asset %in% usd_lil_value_assets ~ format_dollar(main_val, rounding), 
-        cur_asset %in% btc_value_assets ~ 
-          as.character(round(main_val, rounding)),
-        TRUE ~ format_dollar(main_val, rounding)
-      )
-    
-    second_val <- 100*round((DATA[DATA$datetime == max(DATA$datetime) & 
-                                         DATA$asset == cur_asset,]$price) / 
-                              max(DATA[DATA$asset == cur_asset,]$high)
-                              -1,4)
-    
-    ath_date <- DATA[DATA$asset == cur_asset, ][max(DATA[DATA$asset == cur_asset, ]$high) == DATA[DATA$asset == cur_asset, ]$high, ]$datetime
-    
+    if(cur_asset %in% c("ETH/BTC")){
+      main_val <- paste0(format_number(main_val, rounding))
+    }else{
+      main_val <- paste0('$', format_number(main_val, rounding))
+    }
+    second_val <- scales::percent(second_val-1, 0.01)
     color_val <- "aqua"
     
     valueBox(
@@ -746,7 +754,7 @@ ath_value_box <-
         paste0("Established on: ", ath_date), 
         br(), 
         paste0("Current Price % Down from ATH : ", 
-                        second_val, "%")
+                        second_val)
                         ),  
       
       color = color_val
@@ -4792,7 +4800,7 @@ copy_paste_score_volatilty_pattern <-
       ### now onto risk 
       function_local_data$n <- seq(from = 1, to = nrow(function_local_data), by = 1)
   
-      if(CUR_ASSET == "BTC/USD"){
+      if(CUR_ASSET %in% c("BTC/USD", "TOTAL MC" )){
         function_local_data <- BTC_risk_metric(DATA = function_local_data, 
                                     DAY_MA = 50, 
                                     POWER = 2, 
@@ -4972,7 +4980,7 @@ copy_paste_risk <-
       ### now onto risk 
       function_local_data$n <- seq(from = 1, to = nrow(function_local_data), by = 1)
       
-      if(CUR_ASSET == "BTC/USD"){
+      if(CUR_ASSET %in% c( "BTC/USD", 'TOTAL MC')){
         function_local_data <- BTC_risk_metric(DATA = function_local_data, 
                                     DAY_MA = 50, 
                                     POWER = 2, 
@@ -5262,12 +5270,12 @@ prophet_test <-
 
   all_data_EDA[all_data_EDA$ms == 1 & all_data_EDA$market_stage == "Accumulation", ]$market_stage <- "Bull market"
   
-  all_data_EDA <- all_data_EDA %>% 
+  all_data_EDA_btc <- all_data_EDA %>% 
     select(-first_ath_date, -first_ms_date, -last_ath_date, -last_ms_date, -raw_risk_slope_a, -week_ma_50, -ms)
   
   ## these data set are used to finalize ALT coins data sets 
   btc_20_week_flag <-
-    all_data_EDA %>%
+    all_data_EDA_btc %>%
 
     select(datetime, price, week_ma_20) %>%
 
@@ -5278,11 +5286,49 @@ prophet_test <-
       )) %>% drop_na() %>% select(-price, - week_ma_20)
 
   btc_prices <-
-    all_data_EDA %>%
+    all_data_EDA_btc %>%
     select(datetime, price) %>%
     rename(btc_price = price)
   
   
+}
+
+
+#TOTAL MC 
+{
+  tempfile <- tempfile()  # temp filepath like /var/folders/vq/km5xms9179s_6vhpw5jxfrth0000gn/T//RtmpKgMGfZ/file4c6e2cfde13e
+  save_object(object = "s3://crypto-data-shiny/TOTAL MC.csv", file = tempfile)
+  all_data <- read.csv(tempfile) 
+  all_data <- 
+    all_data %>% 
+    mutate(datetime = as.POSIXct(snapped_at / 1000, origin = "1970-01-01", tz = "UTC")) %>% 
+    rename(price = market_cap) %>% 
+    select(datetime, price) %>% 
+    mutate(open = price, high = price, low = price)
+  
+  all_data_EDA <- modify_raw_data(DATA = all_data, ASSET_NAME = "TOTAL MC")
+  
+  all_data_EDA <- BTC_risk_metric(DATA = all_data_EDA, 
+                                    DAY_MA = 50, 
+                                    POWER = 2, 
+                                    AVG_VOLATILITY_TIMEFRAME = 30,
+                                  
+                                    Y2_f = 15, 
+                                    Y1_f = 16, 
+                                    X2_f = 2840, 
+                                    X1_f = 1703,
+                                    POWER_TR = 1,
+                                  
+                                    Y2_f_l = 4.4,
+                                    Y1_f_l = 3.7,
+                                    X2_f_l = 3319,
+                                    X1_f_l = 2043)
+    ### Market stage 
+  all_data_EDA_total_mc <- 
+    all_data_EDA %>% 
+      mutate(datetime = as.character(datetime)) %>% 
+    left_join(btc_20_week_flag, by = "datetime")
+    
 }
 
 #ETH 
@@ -5394,14 +5440,34 @@ prophet_test <-
 
 ## stack the data sets together to create one master data set 
 
+keep_cols1 <- colnames(all_data_EDA_btc)
+keep_cols2 <- colnames(all_data_EDA_ETH)
+keep_cols3 <- colnames(all_data_LINK_EDA)
+keep_cols4 <- colnames(all_data_ADA_EDA)
+keep_cols5 <- colnames(all_data_THETA_EDA)
+keep_cols6 <- colnames(all_data_VET_EDA)
+keep_cols7 <- colnames(all_data_EDA_total_mc)
+keep_cols8 <- colnames(eth_btc_data)
+
+keep_cols <- 
+  keep_cols1 %>% 
+  intersect(keep_cols2)%>% 
+  intersect(keep_cols3)%>% 
+  intersect(keep_cols4)%>% 
+  intersect(keep_cols5)%>% 
+  intersect(keep_cols6)%>% 
+  intersect(keep_cols7)%>% 
+  intersect(keep_cols8)
+
 master_data <- 
-  rbind(all_data_EDA 
-        ,all_data_EDA_ETH
-        ,all_data_LINK_EDA
-        ,all_data_ADA_EDA
-        ,all_data_THETA_EDA
-        ,all_data_VET_EDA
-        ,eth_btc_data
+  rbind(all_data_EDA_btc %>% select(all_of(keep_cols))
+        ,all_data_EDA_ETH %>% select(all_of(keep_cols))
+        ,all_data_LINK_EDA %>% select(all_of(keep_cols))
+        ,all_data_ADA_EDA %>% select(all_of(keep_cols))
+        ,all_data_THETA_EDA %>% select(all_of(keep_cols))
+        ,all_data_VET_EDA %>% select(all_of(keep_cols))
+        ,all_data_EDA_total_mc %>% select(all_of(keep_cols))
+        ,eth_btc_data %>% select(all_of(keep_cols))
         ) %>% 
   mutate(datetime = as.Date(datetime))
 
@@ -6249,21 +6315,22 @@ body <-
                     tabsetPanel( type = "tabs", 
                        tabPanel("Price Dynamics", 
                                box(plotlyOutput('price_dynamics'), width = 8), 
-                               box(tableOutput('price_dynamics_summary'), width = 4, title = "Summary Table")), 
-                      tabPanel("Price Levels",
-                               h3("Price", align = "center"), 
-                               valueBoxOutput('date_range_min_price', width = 2),
-                               valueBoxOutput('date_range_max_price', width = 2), 
-                               valueBoxOutput('data_range_price_open', width = 2), 
-                               valueBoxOutput('data_range_price_close', width = 2), 
-                               valueBoxOutput('data_range_price_change', width = 2),
-                               valueBoxOutput('data_range_price_p_change', width = 2), 
-                               h3("Volatility", align = "center"),
-                               valueBoxOutput('data_range_pos_vol', width = 3),
-                               valueBoxOutput('data_range_avg_pos_vol', width = 3),
-                               valueBoxOutput('data_range_neg_vol', width = 3),
-                               valueBoxOutput('data_range_avg_neg_vol', width = 3)
-                               )
+                               box(tableOutput('price_dynamics_summary'), width = 4, title = "Summary Table"))
+                       # 
+                       # ,tabPanel("Price Levels",
+                       #         h3("Price", align = "center"), 
+                       #         valueBoxOutput('date_range_min_price', width = 2),
+                       #         valueBoxOutput('date_range_max_price', width = 2), 
+                       #         valueBoxOutput('data_range_price_open', width = 2), 
+                       #         valueBoxOutput('data_range_price_close', width = 2), 
+                       #         valueBoxOutput('data_range_price_change', width = 2),
+                       #         valueBoxOutput('data_range_price_p_change', width = 2), 
+                       #         h3("Volatility", align = "center"),
+                       #         valueBoxOutput('data_range_pos_vol', width = 3),
+                       #         valueBoxOutput('data_range_avg_pos_vol', width = 3),
+                       #         valueBoxOutput('data_range_neg_vol', width = 3),
+                       #         valueBoxOutput('data_range_avg_neg_vol', width = 3)
+                       #         )
                     ), 
                     
                     width = 12
