@@ -1,0 +1,54 @@
+on:
+  push:
+    branches: main
+  workflow_dispatch:
+
+name: Update Readme
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    
+    permissions:
+        contents: write
+        
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+        
+      - name: Install packages
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+            packages:
+              any::jsonlite
+              any::textshaping
+              any::curl
+              any::renv
+              any::devtools
+              any::tidyverse
+              any::lubridate
+              any::aws.s3
+              any::httr
+              any::rlang
+              any::secret
+              any::rvest
+              any::xml2
+              any::stringr
+              any::anytime
+              
+      - name: Render document
+        uses: quarto-dev/quarto-actions/render@v2
+        with:
+          to: gfm
+          path: README.qmd
+          
+      - name: Setup git config
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+          
+      - name: Commit
+        run: |
+          git add .
+          git commit -m "Updated Readme"
+          git push origin main

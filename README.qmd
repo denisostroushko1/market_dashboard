@@ -1,0 +1,20 @@
+---
+title: "Advanced Soccer Statistics"
+author: "Denis Ostroushko"
+output:
+  format: gfm
+execute:
+  echo: false
+  warning: false
+  message: false
+
+---
+
+<!-- gfm --> 
+```{r}
+update_tm <-  paste0(format(Sys.time(), tz="America/Chicago"), " CST")
+```
+
+Last successful data update: `r update_tm`
+
+[App](https://kexite.shinyapps.io/01_Deployment/)
