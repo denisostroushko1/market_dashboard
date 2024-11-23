@@ -16,24 +16,18 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
         
+      - name: Install Quarto
+        uses: quarto-dev/quarto-actions@v2
+        with:
+          version: stable
+        
       - name: Install packages
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
             packages:
-              any::textshaping
-              any::curl
-              any::renv
-              any::devtools
-              any::tidyverse
-              any::lubridate
-              any::aws.s3
-              any::httr
-              any::rlang
-              any::secret
-              any::rvest
-              any::xml2
-              any::stringr
-              any::anytime
+              any::knitr 
+              any::rmarkdown 
+              any::quarto
               
       - name: Render document
         uses: quarto-dev/quarto-actions/render@v2
