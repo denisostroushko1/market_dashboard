@@ -1,5 +1,5 @@
 ---
-title: "Advanced Soccer Statistics"
+title: "Market Analysis App"
 author: "Denis Ostroushko"
 output:
   format: gfm
