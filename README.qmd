@@ -17,4 +17,4 @@ update_tm <-  paste0(format(Sys.time(), tz="America/Chicago"), " CST")
 
 Last successful data update: `r update_tm`
 
-[App](https://kexite.shinyapps.io/01_Deployment/)
+[App](https://kexite.shinyapps.io/super_secret_db/)

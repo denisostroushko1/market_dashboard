@@ -448,7 +448,8 @@ BTC_risk_metric <-
             X2_f_l,
             X1_f_l,
         
-            POWER_TR
+            POWER_TR, 
+           ratio_to_log10 = T
            ){
     
     DATA$week_ma_50 <- frollmean(DATA$price, DAY_MA * 7)
@@ -489,6 +490,10 @@ BTC_risk_metric <-
     ## RAW RISK DIMINISHING SLOPE
      # slope <- (14.359433 - 15.297704) / (2491 - 1024)
      
+    if(ratio_to_log10 == T){
+      DATA$price_to_50_week_MA_w_time_w_vol <- log10(DATA$price_to_50_week_MA_w_time_w_vol)
+    }
+    
      slope <- (Y2_f - Y1_f) / (X2_f - X1_f)
 
     #### intercept = y - slope * x 
@@ -4800,25 +4805,70 @@ copy_paste_score_volatilty_pattern <-
       ### now onto risk 
       function_local_data$n <- seq(from = 1, to = nrow(function_local_data), by = 1)
   
-      if(CUR_ASSET %in% c("BTC/USD", "TOTAL MC" )){
-        function_local_data <- BTC_risk_metric(DATA = function_local_data, 
+      if(CUR_ASSET %in% c("BTC/USD", "ETH/USD","TOTAL MC" )){
+        
+        if(CUR_ASSET == "BTC/USD"){
+              
+            function_local_data <- BTC_risk_metric(DATA = function_local_data, 
+                                        DAY_MA = 50, 
+                                        POWER = 2, 
+                                        AVG_VOLATILITY_TIMEFRAME = 30,
+                                      
+                                        Y2_f = 16.7, 
+                                        Y1_f = 18.5, 
+                                        X2_f = 2634, 
+                                        X1_f = 1156,
+                                        POWER_TR = 1,
+                                      
+                                        Y2_f_l = 3,
+                                        Y1_f_l = 2,
+                                        X2_f_l = 1555,
+                                        X1_f_l = 414,
+                                        ratio_to_log10 = F)
+        }
+        if(CUR_ASSET == "ETH/USD"){
+              function_local_data <- BTC_risk_metric(DATA = function_local_data, 
+                                    DAY_MA = 70, 
+                                    POWER = 2, 
+                                    AVG_VOLATILITY_TIMEFRAME = 30,
+                                  
+                                    Y2_f = 1.25, 
+                                    Y1_f = 1.35,
+                                    
+                                    X2_f = 2094, 
+                                    X1_f = 675,
+                                    POWER_TR = 1,
+                                  
+                                    Y2_f_l = 0.6,
+                                    Y1_f_l = 0.375,
+                                    X2_f_l = 2497,
+                                    X1_f_l = 1219, 
+                                    
+                                    ratio_to_log10 = T)
+        }
+        if(CUR_ASSET == "TOTAL MC"){
+          
+  function_local_data <- BTC_risk_metric(DATA = function_local_data, 
                                     DAY_MA = 50, 
                                     POWER = 2, 
                                     AVG_VOLATILITY_TIMEFRAME = 30,
                                   
-                                    Y2_f = 16.7, 
-                                    Y1_f = 18.5, 
-                                    X2_f = 2634, 
-                                    X1_f = 1156,
+                                    Y2_f = 15, 
+                                    Y1_f = 16, 
+                                    X2_f = 2840, 
+                                    X1_f = 1703,
                                     POWER_TR = 1,
                                   
-                                    Y2_f_l = 3,
-                                    Y1_f_l = 2,
-                                    X2_f_l = 1555,
-                                    X1_f_l = 414)
-      }
+                                    Y2_f_l = 4.4,
+                                    Y1_f_l = 3.7,
+                                    X2_f_l = 3319,
+                                    X1_f_l = 2043, 
+                                  ratio_to_log10 = F)
+        }
+        
+        }
       
-      if(CUR_ASSET %in% c("ETH/USD", "LINK/USD")){
+      if(CUR_ASSET %in% c("LINK/USD")){
         function_local_data <- ALT_risk_metric(DATA = function_local_data, 
                                                DAY_MA = 50, TIME_POWER = 2, RISK_POWER = 2, 
                                                AVG_VOLATILITY_TIMEFRAME = 30)
@@ -4980,25 +5030,71 @@ copy_paste_risk <-
       ### now onto risk 
       function_local_data$n <- seq(from = 1, to = nrow(function_local_data), by = 1)
       
-      if(CUR_ASSET %in% c( "BTC/USD", 'TOTAL MC')){
-        function_local_data <- BTC_risk_metric(DATA = function_local_data, 
+
+      if(CUR_ASSET %in% c("BTC/USD", "ETH/USD","TOTAL MC" )){
+        
+        if(CUR_ASSET == "BTC/USD"){
+              
+            function_local_data <- BTC_risk_metric(DATA = function_local_data, 
+                                        DAY_MA = 50, 
+                                        POWER = 2, 
+                                        AVG_VOLATILITY_TIMEFRAME = 30,
+                                      
+                                        Y2_f = 16.7, 
+                                        Y1_f = 18.5, 
+                                        X2_f = 2634, 
+                                        X1_f = 1156,
+                                        POWER_TR = 1,
+                                      
+                                        Y2_f_l = 3,
+                                        Y1_f_l = 2,
+                                        X2_f_l = 1555,
+                                        X1_f_l = 414,
+                                        ratio_to_log10 = F)
+        }
+        if(CUR_ASSET == "ETH/USD"){
+              function_local_data <- BTC_risk_metric(DATA = function_local_data, 
+                                    DAY_MA = 70, 
+                                    POWER = 2, 
+                                    AVG_VOLATILITY_TIMEFRAME = 30,
+                                  
+                                    Y2_f = 1.25, 
+                                    Y1_f = 1.35,
+                                    
+                                    X2_f = 2094, 
+                                    X1_f = 675,
+                                    POWER_TR = 1,
+                                  
+                                    Y2_f_l = 0.6,
+                                    Y1_f_l = 0.375,
+                                    X2_f_l = 2497,
+                                    X1_f_l = 1219, 
+                                    
+                                    ratio_to_log10 = T)
+        }
+        if(CUR_ASSET == "TOTAL MC"){
+          
+  function_local_data <- BTC_risk_metric(DATA = function_local_data, 
                                     DAY_MA = 50, 
                                     POWER = 2, 
                                     AVG_VOLATILITY_TIMEFRAME = 30,
                                   
-                                    Y2_f = 16.7, 
-                                    Y1_f = 18.5, 
-                                    X2_f = 2634, 
-                                    X1_f = 1156,
+                                    Y2_f = 15, 
+                                    Y1_f = 16, 
+                                    X2_f = 2840, 
+                                    X1_f = 1703,
                                     POWER_TR = 1,
                                   
-                                    Y2_f_l = 3,
-                                    Y1_f_l = 2,
-                                    X2_f_l = 1555,
-                                    X1_f_l = 414)
-      }
+                                    Y2_f_l = 4.4,
+                                    Y1_f_l = 3.7,
+                                    X2_f_l = 3319,
+                                    X1_f_l = 2043, 
+                                  ratio_to_log10 = F)
+        }
+        
+        }
       
-      if(CUR_ASSET %in% c("ETH/USD", "LINK/USD")){
+      if(CUR_ASSET %in% c( "LINK/USD")){
         function_local_data <- ALT_risk_metric(DATA = function_local_data, 
                                                DAY_MA = 50, TIME_POWER = 2, RISK_POWER = 2, 
                                                AVG_VOLATILITY_TIMEFRAME = 30)
@@ -5195,7 +5291,8 @@ prophet_test <-
                                     Y2_f_l = 3,
                                     Y1_f_l = 2,
                                     X2_f_l = 1555,
-                                    X1_f_l = 414)
+                                    X1_f_l = 414, 
+                                  ratio_to_log10 = F)
     
   all_data_EDA$market_stage <-
     as.factor(with(all_data_EDA,
@@ -5322,7 +5419,8 @@ prophet_test <-
                                     Y2_f_l = 4.4,
                                     Y1_f_l = 3.7,
                                     X2_f_l = 3319,
-                                    X1_f_l = 2043)
+                                    X1_f_l = 2043, 
+                                  ratio_to_log10 = F)
     ### Market stage 
   all_data_EDA_total_mc <- 
     all_data_EDA %>% 
@@ -5339,9 +5437,25 @@ prophet_test <-
  
   ### Modify data with functions
   all_data_EDA_ETH <- modify_raw_data(DATA = all_data_EDA_ETH, ASSET_NAME = "ETH/USD")
-  all_data_EDA_ETH <- ALT_risk_metric(DATA = all_data_EDA_ETH, 
-                                               DAY_MA = 50, TIME_POWER = 2, RISK_POWER = 2, 
-                                               AVG_VOLATILITY_TIMEFRAME = 30)
+    all_data_EDA_ETH <- BTC_risk_metric(DATA = all_data_EDA_ETH, 
+                                    DAY_MA = 70, 
+                                    POWER = 2, 
+                                    AVG_VOLATILITY_TIMEFRAME = 30,
+                                  
+                                    Y2_f = 1.25, 
+                                    Y1_f = 1.35,
+                                    
+                                    X2_f = 2094, 
+                                    X1_f = 675,
+                                    POWER_TR = 1,
+                                  
+                                    Y2_f_l = 0.6,
+                                    Y1_f_l = 0.375,
+                                    X2_f_l = 2497,
+                                    X1_f_l = 1219, 
+                                    
+                                    ratio_to_log10 = T)
+    
   ### Market stage 
   all_data_EDA_ETH <- 
     merge(all_data_EDA_ETH, btc_20_week_flag, by = "datetime")
@@ -6664,7 +6778,7 @@ body <-
 
 shinyApp(
   ui = dashboardPage(
-    dashboardHeader(title =  "Coin Galaxy", titleWidth = 300),
+    dashboardHeader(title =  "Searching for a title...", titleWidth = 300),
     sidebar,
     body
   ),
