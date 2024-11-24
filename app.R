@@ -525,6 +525,12 @@ BTC_risk_metric <-
     model <- lm(y ~ sqrt(n), data = low_data_x)
     
     DATA$raw_lower_slope_a <- predict(model, DATA)
+    DATA$price_to_50_week_MA_w_time_w_vol <- 
+      with(DATA, 
+           case_when(
+             price_to_50_week_MA_w_time_w_vol <= raw_lower_slope_a ~ raw_lower_slope_a,
+             TRUE ~ price_to_50_week_MA_w_time_w_vol
+           ))
     
     high_data_x <- data.frame(
       n = c(X1_f,X2_f), 
@@ -4881,9 +4887,24 @@ copy_paste_score_volatilty_pattern <-
       }
       
       if(CUR_ASSET %in% c("ETH/BTC")){
-        function_local_data <- ALT_risk_metric(DATA = function_local_data, 
-                                               DAY_MA = 50, TIME_POWER = 10, RISK_POWER = 2.5, 
-                                               AVG_VOLATILITY_TIMEFRAME = 30)
+        function_local_data <- BTC_risk_metric(
+            DATA = function_local_data, 
+             DAY_MA = 70,
+              POWER = 2,
+              AVG_VOLATILITY_TIMEFRAME = 30,
+              Y2_f = 1.05, 
+              Y1_f = 1.08, 
+              X2_f = 2097, 
+              X1_f = 682,
+              
+              Y2_f_l = 0.59,
+              Y1_f_l = 0.55,
+              X2_f_l = 1482,
+              X1_f_l = 1124,
+          
+              POWER_TR = 1, 
+               ratio_to_log10 = T
+             )
       }
       
       name_x <- as.character("Date")
@@ -5107,9 +5128,24 @@ copy_paste_risk <-
       }
       
       if(CUR_ASSET %in% c("ETH/BTC")){
-        function_local_data <- ALT_risk_metric(DATA = function_local_data, 
-                                               DAY_MA = 50, TIME_POWER = 10, RISK_POWER = 2.5, 
-                                               AVG_VOLATILITY_TIMEFRAME = 30)
+        function_local_data <- 
+          BTC_risk_metric(DATA = function_local_data, 
+             DAY_MA = 70,
+              POWER = 2,
+              AVG_VOLATILITY_TIMEFRAME = 30,
+              Y2_f = 1.05, 
+              Y1_f = 1.08, 
+              X2_f = 2097, 
+              X1_f = 682,
+              
+              Y2_f_l = 0.59,
+              Y1_f_l = 0.55,
+              X2_f_l = 1482,
+              X1_f_l = 1124,
+          
+              POWER_TR = 1, 
+               ratio_to_log10 = T
+             )
       }
       
       name_x <- as.character("Date")
@@ -5546,9 +5582,24 @@ prophet_test <-
   eth_btc_data <- eth_btc_data %>% select(-btc_price)
   
   eth_btc_data <- modify_raw_data(DATA = eth_btc_data, ASSET_NAME = "ETH/BTC")
-  eth_btc_data <- ALT_risk_metric(DATA = eth_btc_data, 
-                                               DAY_MA = 50, TIME_POWER = 10, RISK_POWER = 2.5, 
-                                               AVG_VOLATILITY_TIMEFRAME = 30)
+  eth_btc_data <- 
+    BTC_risk_metric(DATA = eth_btc_data, 
+           DAY_MA = 70,
+            POWER = 2,
+            AVG_VOLATILITY_TIMEFRAME = 30,
+            Y2_f = 1.05, 
+            Y1_f = 1.08, 
+            X2_f = 2097, 
+            X1_f = 682,
+            
+            Y2_f_l = 0.59,
+            Y1_f_l = 0.55,
+            X2_f_l = 1482,
+            X1_f_l = 1124,
+        
+            POWER_TR = 1, 
+             ratio_to_log10 = T
+           )
   
 }
 
