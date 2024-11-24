@@ -3806,11 +3806,15 @@ historical_price_plot <-
       
       text = paste('Date: ', data_set$datetime,
                    '<br>Price: ', 
-                          case_when(
-                            CUR_ASSET %in% c(usd_lil_value_assets, usd_big_value_assets) ~ 
-                                  format_dollar(data_set$price, 4), 
-                            TRUE ~ as.character(round(data_set$price, 6))
-                          ),
+                   
+                   # jump back 
+                   scales::dollar(data_set$price), 
+                          # 
+                          # case_when(
+                          #   CUR_ASSET %in% c(usd_lil_value_assets, usd_big_value_assets) ~ 
+                          #         format_dollar(data_set$price, 4), 
+                          #   TRUE ~ as.character(round(data_set$price, 6))
+                          # ),
                    '<br>Risk: ', round(data_set$scaled_risk,4)), 
       hoverinfo = 'text'
       
