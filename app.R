@@ -4941,12 +4941,7 @@ copy_paste_score_volatilty_pattern <-
       colors = gradient_color_palet, 
       
       text = paste('Date: ', function_local_data$datetime,
-                   '<br>Price: ', 
-                          case_when(
-                            CUR_ASSET %in% c(usd_lil_value_assets, usd_big_value_assets) ~ 
-                                  format_dollar(function_local_data$price, 4), 
-                            TRUE ~ as.character(round(function_local_data$price, 6))
-                          ),
+                   '<br>Price: ', scales::dollar(function_local_data$price, 2), 
                    '<br>Risk: ', round(function_local_data$scaled_risk,4), 
                    '<br>Type: ', function_local_data$type), 
       hoverinfo = 'text'
@@ -4959,7 +4954,7 @@ copy_paste_score_volatilty_pattern <-
                  title = "Price on Log Base 10 Scale",
         
                 margin = y_margins, 
-                shapes = list( vline(color = "blue", x0 = start_x, x1 = end_x, y0 = start_y, y1 = end_y) )
+                shapes = list( vline(color = "blue", x0 = start_x, x1 = end_x, y0 = start_y, y1 = max_price) )
     ) %>% 
       colorbar(len = 1, title = "Risk")
       
@@ -5162,7 +5157,7 @@ copy_paste_risk <-
     start_x <- max(hist_data$datetime)
     end_x <- max(hist_data$datetime)
     start_y <- 0 # min(function_local_data$price)
-    end_y <- max(function_local_data$price)
+    end_y <- 1
     
     plot_ly(
       type = "scatter", 
