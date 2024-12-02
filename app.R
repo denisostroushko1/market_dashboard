@@ -5474,20 +5474,20 @@ prophet_test <-
   all_data_EDA <- modify_raw_data(DATA = all_data, ASSET_NAME = "TOTAL3 MC")
   
   all_data_EDA <- BTC_risk_metric(DATA = all_data_EDA, 
-                                    DAY_MA = 65, 
+                                    DAY_MA = 45, 
                                     POWER = 2, 
                                     AVG_VOLATILITY_TIMEFRAME = 30,
                                   
                                     Y2_f = 17, 
                                     Y1_f = 20, 
-                                    X2_f = 2019, 
-                                    X1_f = 888,
+                                    X2_f = 2816, 
+                                    X1_f = 1688,
                                     POWER_TR = 1,
                                   
-                                    Y2_f_l = 4,
-                                    Y1_f_l = 3,
-                                    X2_f_l = 2494,
-                                    X1_f_l = 1222, 
+                                    Y2_f_l = 4.5,
+                                    Y1_f_l = 3.5,
+                                    X2_f_l = 3294,
+                                    X1_f_l = 2022, 
                                   ratio_to_log10 = F)
     ### Market stage 
   all_data_EDA_total3_mc <- 
