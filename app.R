@@ -1303,9 +1303,8 @@ price_dynamics_summary <-
 
 risk_aggregate_box <- 
   function(DATA, CUR_ASSET){
-    
-    main_val <- round(DATA[DATA$datetime == max(DATA$datetime) & 
-                                     DATA$asset == CUR_ASSET,]$scaled_risk, 4)
+    main_val <- round((DATA[DATA$asset == CUR_ASSET,] %>% 
+                         filter(datetime == max(datetime)))$scaled_risk, 4)
   
     color_val <- 
       case_when(
@@ -1329,9 +1328,9 @@ slope_aggregate_box <-
     
     data <- DATA %>% filter(asset == CUR_ASSET)
  #   data <- estimate_slopes(data)
+    main_val <- round((DATA[DATA$asset == CUR_ASSET,] %>% 
+                         filter(datetime == max(datetime)))$coeff_p, 4)
     
-    main_val <- round(data[data$datetime == max(data$datetime) ,]$coeff_p, 4)
-  
     q_85 <- quantile(data$coeff_p, 0.85, na.rm = T)
     q_90 <- quantile(data$coeff_p, 0.90, na.rm = T)
     
@@ -1353,9 +1352,8 @@ slope_aggregate_box <-
 
 ma_ext_aggregate_box <- 
   function(DATA, CUR_ASSET){
-    
-    main_val <- round(DATA[DATA$datetime == max(DATA$datetime) & 
-                                     DATA$asset == CUR_ASSET,]$price_ma_ratio, 4)
+    main_val <- round((DATA[DATA$asset == CUR_ASSET,] %>% 
+                         filter(datetime == max(datetime)))$price_ma_ratio, 4)
   
     q_85 <- quantile(DATA[DATA$asset == CUR_ASSET,]$price_ma_ratio, 0.85, na.rm = T)
     q_90 <- quantile(DATA[DATA$asset == CUR_ASSET,]$price_ma_ratio, 0.90, na.rm = T)
@@ -1381,9 +1379,9 @@ ma_ext_aggregate_box <-
 ma_roc_aggregate_box <- 
   function(DATA, CUR_ASSET){
     
-    main_val <- round(DATA[DATA$datetime == max(DATA$datetime) & 
-                                     DATA$asset == CUR_ASSET,]$ma_roc, 4)
-  
+    main_val <- round((DATA[DATA$asset == CUR_ASSET,] %>% 
+                         filter(datetime == max(datetime)))$ma_roc, 4)
+    
     q_85 <- quantile(DATA[DATA$asset == CUR_ASSET,]$ma_roc, 0.85, na.rm = T)
     q_90 <- quantile(DATA[DATA$asset == CUR_ASSET,]$ma_roc, 0.90, na.rm = T)
     
@@ -1407,9 +1405,9 @@ ma_roc_aggregate_box <-
 rsi_aggregate_box <- 
   function(DATA, CUR_ASSET){
     
-    main_val <- round(DATA[DATA$datetime == max(DATA$datetime) & 
-                                     DATA$asset == CUR_ASSET,]$rsi, 2)
-  
+    main_val <- round((DATA[DATA$asset == CUR_ASSET,] %>% 
+                         filter(datetime == max(datetime)))$rsi, 4)
+    
     q_85 <- quantile(DATA[DATA$asset == CUR_ASSET,]$rsi, 0.85, na.rm = T)
     q_90 <- quantile(DATA[DATA$asset == CUR_ASSET,]$rsi, 0.90, na.rm = T)
     
@@ -5157,7 +5155,7 @@ copy_paste_risk <-
     start_x <- max(hist_data$datetime)
     end_x <- max(hist_data$datetime)
     start_y <- 0 # min(function_local_data$price)
-    end_y <- 1
+    end_y <- max(function_local_data$price)
     
     plot_ly(
       type = "scatter", 
@@ -5295,9 +5293,9 @@ prophet_test <-
 
     
   }
-###############
-# Collect Data# 
-###############
+################
+# Collect Data # 
+################
 
 #BTC
 {
@@ -5425,7 +5423,6 @@ prophet_test <-
   
 }
 
-
 #TOTAL MC 
 {
   tempfile <- tempfile()  # temp filepath like /var/folders/vq/km5xms9179s_6vhpw5jxfrth0000gn/T//RtmpKgMGfZ/file4c6e2cfde13e
@@ -5458,6 +5455,42 @@ prophet_test <-
                                   ratio_to_log10 = F)
     ### Market stage 
   all_data_EDA_total_mc <- 
+    all_data_EDA %>% 
+      mutate(datetime = as.character(datetime)) %>% 
+    left_join(btc_20_week_flag, by = "datetime")
+    
+}
+
+
+#TOTAL3 MC 
+{
+  tempfile <- tempfile()  # temp filepath like /var/folders/vq/km5xms9179s_6vhpw5jxfrth0000gn/T//RtmpKgMGfZ/file4c6e2cfde13e
+  save_object(object = "s3://crypto-data-shiny/TOTAL3 MC.csv", file = tempfile)
+  all_data <- read.csv(tempfile) %>% select(-X)
+  all_data <- 
+    all_data %>% 
+    mutate(open = price, high = price, low = price)
+  
+  all_data_EDA <- modify_raw_data(DATA = all_data, ASSET_NAME = "TOTAL3 MC")
+  
+  all_data_EDA <- BTC_risk_metric(DATA = all_data_EDA, 
+                                    DAY_MA = 65, 
+                                    POWER = 2, 
+                                    AVG_VOLATILITY_TIMEFRAME = 30,
+                                  
+                                    Y2_f = 17, 
+                                    Y1_f = 20, 
+                                    X2_f = 2019, 
+                                    X1_f = 888,
+                                    POWER_TR = 1,
+                                  
+                                    Y2_f_l = 4,
+                                    Y1_f_l = 3,
+                                    X2_f_l = 2494,
+                                    X1_f_l = 1222, 
+                                  ratio_to_log10 = F)
+    ### Market stage 
+  all_data_EDA_total3_mc <- 
     all_data_EDA %>% 
       mutate(datetime = as.character(datetime)) %>% 
     left_join(btc_20_week_flag, by = "datetime")
@@ -5612,6 +5645,7 @@ keep_cols5 <- colnames(all_data_THETA_EDA)
 keep_cols6 <- colnames(all_data_VET_EDA)
 keep_cols7 <- colnames(all_data_EDA_total_mc)
 keep_cols8 <- colnames(eth_btc_data)
+keep_cols9 <- colnames(all_data_EDA_total3_mc)
 
 keep_cols <- 
   keep_cols1 %>% 
@@ -5621,7 +5655,8 @@ keep_cols <-
   intersect(keep_cols5)%>% 
   intersect(keep_cols6)%>% 
   intersect(keep_cols7)%>% 
-  intersect(keep_cols8)
+  intersect(keep_cols8)%>% 
+  intersect(keep_cols9)
 
 master_data <- 
   rbind(all_data_EDA_btc %>% select(all_of(keep_cols))
@@ -5632,6 +5667,7 @@ master_data <-
         ,all_data_VET_EDA %>% select(all_of(keep_cols))
         ,all_data_EDA_total_mc %>% select(all_of(keep_cols))
         ,eth_btc_data %>% select(all_of(keep_cols))
+        ,all_data_EDA_total3_mc %>% select(all_of(keep_cols))
         ) %>% 
   mutate(datetime = as.Date(datetime))
 
@@ -6306,6 +6342,17 @@ server_side <-
         
       }
 
+## desired order of assets in the sidebar options 
+
+desired <- c("BTC/USD", "ETH/USD", "ETH/BTC", "TOTAL MC", "TOTAL3 MC")
+whatever <- setdiff(
+  unique(master_data$asset) , 
+  desired
+) %>% sort()
+
+asset_order <- c(desired, whatever)
+  
+
 sidebar <- 
   dashboardSidebar(
     width = 300, 
@@ -6316,7 +6363,7 @@ sidebar <-
       
       ,dateInput("max_date", label = "Select End Date:", value = (max(master_data$datetime)))
       
-      ,selectizeInput("assets", "Symbol Search: ", unique(master_data$asset))
+      ,selectizeInput("assets", "Symbol Search: ", asset_order)
       
 #      ,sliderInput("cons_day_slider", "Select Cons. Days Highlight Cutoff", min = 1, max = 20, value = 5, step = 1)
       
