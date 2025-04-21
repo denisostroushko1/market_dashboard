@@ -5461,7 +5461,6 @@ prophet_test <-
     
 }
 
-
 #TOTAL3 MC 
 {
   tempfile <- tempfile()  # temp filepath like /var/folders/vq/km5xms9179s_6vhpw5jxfrth0000gn/T//RtmpKgMGfZ/file4c6e2cfde13e
@@ -5492,7 +5491,9 @@ prophet_test <-
     ### Market stage 
   all_data_EDA_total3_mc <- 
     all_data_EDA %>% 
-      mutate(datetime = as.character(datetime)) %>% 
+      mutate(datetime = as.character(datetime),
+             scaled_risk = frollmean(scaled_risk, 5)) %>% 
+    na.omit() %>% 
     left_join(btc_20_week_flag, by = "datetime")
     
 }
@@ -5530,119 +5531,119 @@ prophet_test <-
   
   
 }
-
-#LINK
+# 
+# #LINK
+# {
+#   
+#   tempfile <- tempfile()  # temp filepath like /var/folders/vq/km5xms9179s_6vhpw5jxfrth0000gn/T//RtmpKgMGfZ/file4c6e2cfde13e
+#   save_object(object = "s3://crypto-data-shiny/all_available_LINK.csv", file = tempfile)
+#   all_data_LINK_EDA <- read.csv(tempfile) %>% select(all_of(c('datetime', 'price', 'open', 'high', 'low'))) %>% arrange(datetime)
+#  
+#   ### Modify data with functions
+#   all_data_LINK_EDA <- modify_raw_data(DATA = all_data_LINK_EDA, ASSET_NAME = "LINK/USD")
+#   all_data_LINK_EDA <- ALT_risk_metric(DATA = all_data_LINK_EDA, 
+#                                                DAY_MA = 50, TIME_POWER = 2, RISK_POWER = 2, 
+#                                                AVG_VOLATILITY_TIMEFRAME = 30)
+#   
+#   all_data_LINK_EDA <- 
+#     merge(all_data_LINK_EDA, btc_20_week_flag, by = "datetime")
+#   
+# }
+# 
+# #ADA
+# {
+#   tempfile <- tempfile()  # temp filepath like /var/folders/vq/km5xms9179s_6vhpw5jxfrth0000gn/T//RtmpKgMGfZ/file4c6e2cfde13e
+#   save_object(object = "s3://crypto-data-shiny/all_available_ADA.csv", file = tempfile)
+#   all_data_ADA_EDA <- read.csv(tempfile) %>% select(all_of(c('datetime', 'price', 'open', 'high', 'low'))) %>% arrange(datetime)
+#   
+#   all_data_ADA_EDA <- all_data_ADA_EDA %>% filter(datetime >= as.Date("2018-03-15"))
+#   
+#     ### Modify data with functions
+#   all_data_ADA_EDA <- modify_raw_data(DATA = all_data_ADA_EDA, ASSET_NAME = "ADA/USD")
+#   all_data_ADA_EDA <- ALT_risk_metric(DATA = all_data_ADA_EDA, 
+#                                                DAY_MA = 50, TIME_POWER = 10, RISK_POWER = 2, 
+#                                                AVG_VOLATILITY_TIMEFRAME = 30)
+#   
+#   all_data_ADA_EDA <- 
+#     merge(all_data_ADA_EDA, btc_20_week_flag, by = "datetime")
+#   
+# }
+# 
+# #THETA
+# {
+#   tempfile <- tempfile()  # temp filepath like /var/folders/vq/km5xms9179s_6vhpw5jxfrth0000gn/T//RtmpKgMGfZ/file4c6e2cfde13e
+#   save_object(object = "s3://crypto-data-shiny/all_available_THETA.csv", file = tempfile)
+#   all_data_THETA_EDA <- read.csv(tempfile) %>% select(all_of(c('datetime', 'price', 'open', 'high', 'low')))   %>% arrange(datetime)
+#   
+#   all_data_THETA_EDA <- modify_raw_data(DATA = all_data_THETA_EDA, ASSET_NAME = "THETA/USD")
+#   all_data_THETA_EDA <- ALT_risk_metric(DATA = all_data_THETA_EDA, 
+#                                                DAY_MA = 50, TIME_POWER = 10, RISK_POWER = 2, 
+#                                                AVG_VOLATILITY_TIMEFRAME = 30)
+#   all_data_THETA_EDA <- 
+#     merge(all_data_THETA_EDA, btc_20_week_flag, by = "datetime")
+#   
+# }
+# 
+# #VET 
+# {
+#   tempfile <- tempfile()  # temp filepath like /var/folders/vq/km5xms9179s_6vhpw5jxfrth0000gn/T//RtmpKgMGfZ/file4c6e2cfde13e
+#   save_object(object = "s3://crypto-data-shiny/all_available_VET.csv", file = tempfile)
+#   all_data_VET_EDA <- read.csv(tempfile) %>% select(all_of(c('datetime', 'price', 'open', 'high', 'low'))) %>% arrange(datetime)
+#   
+#   all_data_VET_EDA <- modify_raw_data(DATA = all_data_VET_EDA, ASSET_NAME = "VET/USD")
+#   all_data_VET_EDA <- ALT_risk_metric(DATA = all_data_VET_EDA, 
+#                                                DAY_MA = 50, TIME_POWER = 10, RISK_POWER = 2, 
+#                                                AVG_VOLATILITY_TIMEFRAME = 30)  
+# 
+#   all_data_VET_EDA <-
+#     merge(all_data_VET_EDA, btc_20_week_flag, by = "datetime")
+# 
+# }
+# 
+# # ETH/BTC
 {
-  
-  tempfile <- tempfile()  # temp filepath like /var/folders/vq/km5xms9179s_6vhpw5jxfrth0000gn/T//RtmpKgMGfZ/file4c6e2cfde13e
-  save_object(object = "s3://crypto-data-shiny/all_available_LINK.csv", file = tempfile)
-  all_data_LINK_EDA <- read.csv(tempfile) %>% select(all_of(c('datetime', 'price', 'open', 'high', 'low'))) %>% arrange(datetime)
- 
-  ### Modify data with functions
-  all_data_LINK_EDA <- modify_raw_data(DATA = all_data_LINK_EDA, ASSET_NAME = "LINK/USD")
-  all_data_LINK_EDA <- ALT_risk_metric(DATA = all_data_LINK_EDA, 
-                                               DAY_MA = 50, TIME_POWER = 2, RISK_POWER = 2, 
-                                               AVG_VOLATILITY_TIMEFRAME = 30)
-  
-  all_data_LINK_EDA <- 
-    merge(all_data_LINK_EDA, btc_20_week_flag, by = "datetime")
-  
-}
-
-#ADA
-{
-  tempfile <- tempfile()  # temp filepath like /var/folders/vq/km5xms9179s_6vhpw5jxfrth0000gn/T//RtmpKgMGfZ/file4c6e2cfde13e
-  save_object(object = "s3://crypto-data-shiny/all_available_ADA.csv", file = tempfile)
-  all_data_ADA_EDA <- read.csv(tempfile) %>% select(all_of(c('datetime', 'price', 'open', 'high', 'low'))) %>% arrange(datetime)
-  
-  all_data_ADA_EDA <- all_data_ADA_EDA %>% filter(datetime >= as.Date("2018-03-15"))
-  
-    ### Modify data with functions
-  all_data_ADA_EDA <- modify_raw_data(DATA = all_data_ADA_EDA, ASSET_NAME = "ADA/USD")
-  all_data_ADA_EDA <- ALT_risk_metric(DATA = all_data_ADA_EDA, 
-                                               DAY_MA = 50, TIME_POWER = 10, RISK_POWER = 2, 
-                                               AVG_VOLATILITY_TIMEFRAME = 30)
-  
-  all_data_ADA_EDA <- 
-    merge(all_data_ADA_EDA, btc_20_week_flag, by = "datetime")
-  
-}
-
-#THETA
-{
-  tempfile <- tempfile()  # temp filepath like /var/folders/vq/km5xms9179s_6vhpw5jxfrth0000gn/T//RtmpKgMGfZ/file4c6e2cfde13e
-  save_object(object = "s3://crypto-data-shiny/all_available_THETA.csv", file = tempfile)
-  all_data_THETA_EDA <- read.csv(tempfile) %>% select(all_of(c('datetime', 'price', 'open', 'high', 'low')))   %>% arrange(datetime)
-  
-  all_data_THETA_EDA <- modify_raw_data(DATA = all_data_THETA_EDA, ASSET_NAME = "THETA/USD")
-  all_data_THETA_EDA <- ALT_risk_metric(DATA = all_data_THETA_EDA, 
-                                               DAY_MA = 50, TIME_POWER = 10, RISK_POWER = 2, 
-                                               AVG_VOLATILITY_TIMEFRAME = 30)
-  all_data_THETA_EDA <- 
-    merge(all_data_THETA_EDA, btc_20_week_flag, by = "datetime")
-  
-}
-
-#VET 
-{
-  tempfile <- tempfile()  # temp filepath like /var/folders/vq/km5xms9179s_6vhpw5jxfrth0000gn/T//RtmpKgMGfZ/file4c6e2cfde13e
-  save_object(object = "s3://crypto-data-shiny/all_available_VET.csv", file = tempfile)
-  all_data_VET_EDA <- read.csv(tempfile) %>% select(all_of(c('datetime', 'price', 'open', 'high', 'low'))) %>% arrange(datetime)
-  
-  all_data_VET_EDA <- modify_raw_data(DATA = all_data_VET_EDA, ASSET_NAME = "VET/USD")
-  all_data_VET_EDA <- ALT_risk_metric(DATA = all_data_VET_EDA, 
-                                               DAY_MA = 50, TIME_POWER = 10, RISK_POWER = 2, 
-                                               AVG_VOLATILITY_TIMEFRAME = 30)  
-
-  all_data_VET_EDA <-
-    merge(all_data_VET_EDA, btc_20_week_flag, by = "datetime")
-
-}
-
-# ETH/BTC
-{
-  e <- all_data_EDA_ETH %>% 
+  e <- all_data_EDA_ETH %>%
     select(datetime, price, high, low, open, market_stage)
-  
+
   eth_btc_data <- e %>% left_join(btc_prices, by = "datetime")
-  
+
   eth_btc_data$price <- with(eth_btc_data, price / btc_price)
   eth_btc_data$high  <- with(eth_btc_data, high / btc_price)
   eth_btc_data$low   <- with(eth_btc_data, low / btc_price)
   eth_btc_data$open  <- with(eth_btc_data, open / btc_price)
 
   eth_btc_data <- eth_btc_data %>% select(-btc_price)
-  
+
   eth_btc_data <- modify_raw_data(DATA = eth_btc_data, ASSET_NAME = "ETH/BTC")
-  eth_btc_data <- 
-    BTC_risk_metric(DATA = eth_btc_data, 
+  eth_btc_data <-
+    BTC_risk_metric(DATA = eth_btc_data,
            DAY_MA = 70,
             POWER = 2,
             AVG_VOLATILITY_TIMEFRAME = 30,
-            Y2_f = 1.05, 
-            Y1_f = 1.08, 
-            X2_f = 2097, 
+            Y2_f = 1.05,
+            Y1_f = 1.08,
+            X2_f = 2097,
             X1_f = 682,
-            
+
             Y2_f_l = 0.59,
             Y1_f_l = 0.55,
             X2_f_l = 1482,
             X1_f_l = 1124,
-        
-            POWER_TR = 1, 
+
+            POWER_TR = 1,
              ratio_to_log10 = T
            )
-  
+
 }
 
 ## stack the data sets together to create one master data set 
 
 keep_cols1 <- colnames(all_data_EDA_btc)
 keep_cols2 <- colnames(all_data_EDA_ETH)
-keep_cols3 <- colnames(all_data_LINK_EDA)
-keep_cols4 <- colnames(all_data_ADA_EDA)
-keep_cols5 <- colnames(all_data_THETA_EDA)
-keep_cols6 <- colnames(all_data_VET_EDA)
+# keep_cols3 <- colnames(all_data_LINK_EDA)
+# keep_cols4 <- colnames(all_data_ADA_EDA)
+# keep_cols5 <- colnames(all_data_THETA_EDA)
+# keep_cols6 <- colnames(all_data_VET_EDA)
 keep_cols7 <- colnames(all_data_EDA_total_mc)
 keep_cols8 <- colnames(eth_btc_data)
 keep_cols9 <- colnames(all_data_EDA_total3_mc)
@@ -5650,10 +5651,10 @@ keep_cols9 <- colnames(all_data_EDA_total3_mc)
 keep_cols <- 
   keep_cols1 %>% 
   intersect(keep_cols2)%>% 
-  intersect(keep_cols3)%>% 
-  intersect(keep_cols4)%>% 
-  intersect(keep_cols5)%>% 
-  intersect(keep_cols6)%>% 
+  # intersect(keep_cols3)%>% 
+  # intersect(keep_cols4)%>% 
+  # intersect(keep_cols5)%>% 
+  # intersect(keep_cols6)%>% 
   intersect(keep_cols7)%>% 
   intersect(keep_cols8)%>% 
   intersect(keep_cols9)
@@ -5661,10 +5662,10 @@ keep_cols <-
 master_data <- 
   rbind(all_data_EDA_btc %>% select(all_of(keep_cols))
         ,all_data_EDA_ETH %>% select(all_of(keep_cols))
-        ,all_data_LINK_EDA %>% select(all_of(keep_cols))
-        ,all_data_ADA_EDA %>% select(all_of(keep_cols))
-        ,all_data_THETA_EDA %>% select(all_of(keep_cols))
-        ,all_data_VET_EDA %>% select(all_of(keep_cols))
+        # ,all_data_LINK_EDA %>% select(all_of(keep_cols))
+        # ,all_data_ADA_EDA %>% select(all_of(keep_cols))
+        # ,all_data_THETA_EDA %>% select(all_of(keep_cols))
+        # ,all_data_VET_EDA %>% select(all_of(keep_cols))
         ,all_data_EDA_total_mc %>% select(all_of(keep_cols))
         ,eth_btc_data %>% select(all_of(keep_cols))
         ,all_data_EDA_total3_mc %>% select(all_of(keep_cols))
